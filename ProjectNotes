@@ -1,1 +1,31 @@
 # 12/7/2021 - Notes file for the Crab Survey Tool 
+Attendees: Daniel, Matt, Katelyn
+
+ToDo: 
+  1. spatial base file generation / collection
+    a. Hex grid at some level resolution (100m, 500m) (shapefile)
+    b. Management layers (shapefile)
+      i. Catch Areas
+      ii. Crab Management Regions
+      iii. Tribal exlusive areas
+      iv. (future) navigation/safety/ etc. exlusion areas
+    c. Depth (raster brick)
+      i. DEM
+      ii. King County Countours
+   
+   2. Tool Features
+    a. Input -> depth range
+        Output -> grid centepoint of array points meeting test criteria.
+        Secondary Output -> secondary and tertiary survey points for each survey criterion. 
+    b. Customizeable depth bins breaks
+      i. three bins initially
+    c. Definable areas
+      i. drop down list for catch area/tribal area/ crab management region
+      
+  3 User Interface Mockup (MN) 
+    a. working interface with no function for design purposes.
+      
+  4. Final product fuction around attribute data of constitutent layers rather than be geo referenced. 
+    a. store georeference (center point) coordinates as a string field.
+      
+  
