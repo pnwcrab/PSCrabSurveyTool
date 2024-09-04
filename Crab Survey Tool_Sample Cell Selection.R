@@ -91,7 +91,7 @@ set.seed(159)
 sample_cells_25B <- grid_2w_binned %>% 
   filter(CatchArea == "25B") %>% # subset to CA 25B
   group_by(STRATA) %>% # group sample cells in CA 25B by depth strata
-  slice_sample(n = round((3*(60 * 0.5)))) %>% # sample primary, secondary, and tertiary cells within 25B 
+  slice_sample(n = round((3*(60 * 0.5))), replace = TRUE) %>% # sample primary, secondary, and tertiary cells within 25B 
                                               # based on proportion of all potential 
                                               # samples in 2W that fall within 25B. 
   mutate(SamplePriority = rep(1:3, length.out = n()))
@@ -106,7 +106,7 @@ sample_cells_25D <- grid_2w_binned %>%
                                   # based on proportion of all potential 
                                   # samples in 2W that fall within 25D.
   group_by(STRATA) %>%
-  slice_sample(n = round((3*(60 * 0.06))))  %>%
+  slice_sample(n = round((3*(60 * 0.06))), replace = TRUE)  %>%
   mutate(SamplePriority = rep(1:3, length.out = n()))
 
 sample_cells_25D$SamplePriority <- as.factor(sample_cells_25D$SamplePriority) 
@@ -119,7 +119,7 @@ sample_cells_26AW <- grid_2w_binned %>%
                                   # based on proportion of all potential 
                                   # samples in 2W that fall within 26AW.
   group_by(STRATA) %>%
-  slice_sample(n = round((3*(60 * 0.44)))) %>%
+  slice_sample(n = round((3*(60 * 0.44))), replace = TRUE) %>%
   mutate(SamplePriority = rep(1:3, length.out = n()))
 
 sample_cells_26AW$SamplePriority <- as.factor(sample_cells_26AW$SamplePriority)
@@ -127,9 +127,36 @@ sample_cells_26AW$SamplePriority <- as.factor(sample_cells_26AW$SamplePriority)
 table(sample_cells_26AW$SamplePriority)
 
 
-## Combine selected cells back together
-selected <- bind_rows(sample_cells_25B, sample_cells_25D, sample_cells_26AW )
+## Combine selected cells back together and arrange them
+selected <- bind_rows(sample_cells_25B, sample_cells_25D, sample_cells_26AW ) %>%
+  arrange(ID, CatchArea, STRATA, SamplePriority) %>%
+  mutate(SampleID = paste0(CatchArea, "-", STRATA, "-", SamplePriority, "-", row_number())) %>%
+  select(SampleID, CatchArea, SamplePriority, STRATA, MinDepth, MaxDepth, MedianDepth, MeanDepth, RANGE, STD, ID)
+
+dim(selected)
 table(selected$CatchArea)
+table(selected$SampleID)
+
+xtabs(~ CatchArea + STRATA + SamplePriority, data = selected)
+
+## Calculate centroid coordiantes, add coordinate fields to dataframe 
+selected_centroid <- selected %>%
+  st_transform(crs = 4326) %>%
+  st_centroid() %>%
+  mutate(Latitude = st_coordinates(.)[,1] %>%
+           signif(digits = 9), 
+         Longitude = st_coordinates(.)[,2] %>%
+           signif(digits = 9)) %>%
+  st_drop_geometry() %>%
+  select(SampleID, Latitude, Longitude)
+
+
+#mapview(selected_centroid)
+
+## join coordinate fields to hex cell data frame.
+selected <- left_join(selected, selected_centroid, by = c("SampleID" = "SampleID")) 
+
+dim(selected)
 
 mapview(selected,
         zcol = c("STRATA", "SamplePriority"),
@@ -138,10 +165,10 @@ mapview(selected,
 selected_1 <- selected[selected$SamplePriority == "1", ]
 table(selected_1$CatchArea)
 xtabs( ~ CatchArea + STRATA, data = selected_1)
+samples_per_cell <- selected_1 %>% count(ID, STRATA)
 
 mapview(selected_1,
         zcol = c("STRATA"),
         layer.name = "Selected Sample Cells by Depth Strata")
 
 ## Identify cells that are sampled more than once. 
-selected_count <- aggregate()
