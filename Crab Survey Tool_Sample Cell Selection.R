@@ -171,4 +171,5 @@ mapview(selected_1,
         zcol = c("STRATA"),
         layer.name = "Selected Sample Cells by Depth Strata")
 
-## Identify cells that are sampled more than once. 
+## Export shapefile of selected sample grid cells
+st_write(selected, "./Output/Selected Primary and Backup Sample Cells_2W.shp", driver = "ESRI Shapefile")
